@@ -1,0 +1,79 @@
+
+---
+title: "Información de Nómina"
+author: "Jose Londoño"
+header-includes:
+   - \usepackage{tabu}
+   - \usepackage[spanish]{babel}
+output: pdf_document
+---
+
+```{r Preambulo,echo=F, message=F}
+#install.packages("kableExtra")
+library("knitr")
+library("readxl")
+library("kableExtra")
+
+#Primero que todo hay que crear un data frame con info de las personas
+db <- data.frame(c("Cedula","Celular"),c("Código","Correo"), c("Salario", "Centro de costos"))
+#Se quitan los nombres de las columnas del dataframe pues no interesan
+colnames(db) <- NULL
+
+#Se imprime la tabla y se formatea con ::kableExtra
+kable(db) %>%
+kable_styling(full_width = T) %>%
+add_header_above(c("Nombre del reporte"=3))
+```
+
+\vspace{24pt}
+
+```{r transacciones, echo=F, results="asis", warning=F}
+options(xtable.comment = FALSE)
+library("xtable")
+datos<- read_xlsx("transacciones.xlsx", sheet=1, skip=2)[,c("Nro. Registro","Nombre del Tercero","Nombre Transacción","Tipo Asiento","Precio/Valor Bruto")]
+
+individuo <- subset(datos, datos$`Nombre del Tercero`==i)
+
+individuo <-individuo[order(individuo$`Tipo Asiento`, decreasing = T), ,drop=F]
+individuo["Sumas"]<- NA
+individuo["Restas"] <- NA
+
+for(i in 1:nrow(individuo)){
+  
+  if(individuo$`Tipo Asiento`[i]=="DB"){
+    individuo$Sumas[i] <- individuo$`Precio/Valor Bruto`[i]} 
+  else{
+    individuo$Sumas[i] <- c("")}
+  if(individuo$`Tipo Asiento`[i]=="CR"){
+    individuo$Restas[i] <- individuo$`Precio/Valor Bruto`[i]} 
+  else{
+    individuo$Restas[i] <- c("")}
+}
+
+individuo <- individuo[,c("Nro. Registro","Nombre Transacción","Sumas","Restas")]
+
+
+tripilis <- xtable(individuo)
+align(tripilis) <- "|p{3cm}|p{3cm}|p{6cm}|p{3cm}|p{3cm}|"
+
+print(tripilis, include.rownames=F)
+
+
+```
+
+```{r ssumatorias, echo=F, results="asis"}
+library(xtable)
+sumatorias <- data.frame("","",c("Sumatoria sumas",""), c("Sumatoria restas", "Saldo"))
+
+sup<-xtable(sumatorias)
+align(sup)<-"|p{3cm}|p{3cm}p{6cm}|p{3cm}|p{3cm}|"
+print(sup, include.rownames=F, include.colnames=F, hline.after = c(0,1,2))
+
+
+
+```
+
+
+
+
+

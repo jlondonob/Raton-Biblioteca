@@ -1,0 +1,12 @@
+name: Organizer3000
+title: Organizer3000
+username:
+account: lonbot
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 424938
+bundleId: 1573301
+url: https://lonbot.shinyapps.io/Organizer3000/
+when: 1536269571.23696
+asMultiple: FALSE
+asStatic: FALSE
