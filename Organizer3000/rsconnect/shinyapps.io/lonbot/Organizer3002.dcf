@@ -1,0 +1,13 @@
+name: Organizer3002
+title: Organizer3002
+username:
+account: lonbot
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 425052
+bundleId: 1579599
+url: https://lonbot.shinyapps.io/Organizer3002/
+when: 1536631397.78037
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: simul.xlsx|transacciones.xlsx

@@ -1,0 +1,87 @@
+
+---
+title: "Información de Nómina"
+author: "Jose Londoño"
+header-includes:
+   - \usepackage{tabu}
+   - \usepackage[table]{xcolor}
+output: pdf_document
+---
+
+```{r Info Personal,echo=F, message=F}
+#install.packages("kableExtra")
+library("knitr")
+library("readxl")
+library("kableExtra")
+library("lettercase")
+
+#Primero que todo hay que crear un data frame con info de las personas
+
+d_personal<- subset(pers(), pers()$`Nombre del Tercero`==i)
+resul <- data.frame(c("Cedula",d_personal$Tercero,"Cargo", d_personal$Cargo),
+                    c("Nombre", (str_title_case(str_lowercase(d_personal$`Nombre del Tercero`))),"Correo Electronico",d_personal$`Correo Electronico`),
+                    c("Salario Basico",d_personal$`Precio/Valor Bruto`,"Centro de Costos", d_personal$`Centro de Costos`))
+#Se quitan los nombres de las columnas del dataframe pues no interesan
+colnames(resul) <- NULL
+
+#Se imprime la tabla y se formatea con ::kableExtra
+kable(resul) %>%
+kable_styling(full_width = T) %>%
+  
+row_spec(c(0,2), bold = T, background = "#666666" ) %>% #Nota: Background(Hexagesimal)
+  
+add_header_above(c("Nombre del reporte"=3), bold = T)
+```
+
+\vspace{24pt}
+
+```{r transacciones, echo=F, results="asis", warning=F}
+options(xtable.comment = FALSE)
+library("xtable")
+
+
+individuo <- subset(dat(), dat()$`Nombre del Tercero`==i)
+
+individuo <-individuo[order(individuo$`Tipo Asiento`, decreasing = T), ,drop=F]
+individuo["Sumas"]<- NA
+individuo["Restas"] <- NA
+
+for(i in 1:nrow(individuo)){
+  
+  if(individuo$`Tipo Asiento`[i]=="DB"){
+    individuo$Sumas[i] <- individuo$`Precio/Valor Bruto`[i]} 
+  else{
+    individuo$Sumas[i] <- c("")}
+  if(individuo$`Tipo Asiento`[i]=="CR"){
+    individuo$Restas[i] <- individuo$`Precio/Valor Bruto`[i]} 
+  else{
+    individuo$Restas[i] <- c("")}
+}
+
+individuo <- individuo[,c("Nro. Registro","Nombre Transacción","Sumas","Restas")]
+
+
+tripilis <- xtable(individuo)
+align(tripilis) <- "|p{3cm}|p{3cm}|p{6cm}|p{3cm}|p{3cm}|"
+
+print(tripilis, include.rownames=F)
+
+
+```
+
+```{r ssumatorias, echo=F, results="asis"}
+library(xtable)
+sumatorias <- data.frame("","",c("Sumatoria sumas",""), c("Sumatoria restas", "Saldo"))
+
+sup<-xtable(sumatorias)
+align(sup)<-"|p{3cm}|p{3cm}p{6cm}|p{3cm}|p{3cm}|"
+print(sup, include.rownames=F, include.colnames=F, hline.after = c(0,1,2))
+
+
+
+```
+
+
+
+
+
