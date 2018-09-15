@@ -1,0 +1,135 @@
+
+---
+title: "Información de Nómina"
+author: "Jose Londoño"
+header-includes: |
+  \usepackage{graphicx}
+  \usepackage{fancyhdr}
+  \usepackage{tabu}
+  \usepackage[table]{xcolor}
+  \fancypagestyle{plain}{
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+  \cfoot{\includegraphics[width=400px, height=100px]{footer.png}}}
+output: pdf_document
+---
+
+```{r, echo=F, out.height="200px", out.width="470px", fig.align='center'}
+library(knitr)
+# Aca se imprime la primera foto con el logo de la compañía
+include_graphics("raton2.png")
+```
+
+```{r Info Personal,echo=F, message=F}
+#install.packages("kableExtra")
+library("knitr")
+library("readxl")
+library("kableExtra")
+library("lettercase")
+
+#Primero que todo hay que crear un data frame con info de las personas
+
+d_personal<- subset(pers(), pers()$`Nombre del Tercero`==i)
+resul <- data.frame(c("Cedula",d_personal$Tercero,"Cargo", d_personal$Cargo),
+                    c("Nombre", (str_title_case(str_lowercase(d_personal$`Nombre del Tercero`))),"Correo Electronico",d_personal$`Correo Electronico`),
+                    c("Salario Basico",formatC(d_personal$`Precio/Valor Bruto`, big.mark = ",", format = "f", digits = 2),"Centro de Costos", d_personal$`Centro de Costos`))
+
+#Se quitan los nombres de las columnas del dataframe pues no interesan
+
+colnames(resul) <- NULL
+
+#Se imprime la tabla y se formatea con ::kableExtra
+
+kable(resul) %>%
+kable_styling(full_width = T) %>%
+  
+row_spec(c(0,2), bold = T, background = "#666666" ) %>% #Nota: Background(Hexagesimal)
+  
+add_header_above(c("Nombre del reporte"=3), bold = T)
+```
+
+\vspace{24pt}
+
+```{r transacciones, echo=F, results="asis", warning=F}
+options(xtable.comment = FALSE)
+library("xtable")
+
+#Se filtra la informacion de transacciones por individuo
+
+individuo <- subset(dat(), dat()$`Nombre del Tercero`==i)
+
+#Se organizan las transacciones para que los debitos vayan primero
+
+individuo <-individuo[order(individuo$`Tipo Asiento`, decreasing = T), ,drop=F]
+individuo["Sumas"]<- NA
+individuo["Restas"] <- NA
+
+#Se hace un loop que organice cada transaccion en las columas Sumas o Restas
+
+for(i in 1:nrow(individuo)){
+  
+  if(individuo$`Tipo Asiento`[i]=="DB"){
+    individuo$Sumas[i] <- individuo$`Precio/Valor Bruto`[i]} 
+  else{
+    individuo$Sumas[i] <- NA}
+  if(individuo$`Tipo Asiento`[i]=="CR"){
+    individuo$Restas[i] <- individuo$`Precio/Valor Bruto`[i]} 
+  else{
+    individuo$Restas[i] <- NA}
+}
+
+#Se crean dos nuevas columnas de Sumas y Restas y se formatean para que sean mas claras 
+#al leerlas. Este proceso es necesario pues si se formatean las columnas originales las
+#observaciones pasan a texto y la ultima tabla no podra hacer sumas con ellas.
+
+individuo$Debitos <- ifelse(!is.na(individuo$Sumas),formatC(individuo$Sumas, big.mark = ",", format = "f", digits = 2)," ")
+individuo$Creditos <- ifelse(!is.na(individuo$Restas), formatC(individuo$Restas, big.mark = ",", format="f", digits = 2), "")
+
+
+individuo <- individuo[,c("Nro. Registro","Nombre Transacción","Sumas","Restas", "Debitos","Creditos")]
+
+#Se imprime tabla omitiendo Sumas y Restas (pues visualmente son mejores "Deb" y "Cred")
+tripilis <- xtable(individuo[,c(1,2,5,6)])
+align(tripilis) <- "|p{3cm}|p{3cm}|p{6cm}|p{3cm}|p{3cm}|"
+
+print(tripilis, include.rownames=F, digits = 2)
+
+
+```
+
+```{r ssumatorias, echo=F, results="asis", warning=F}
+library(xtable)
+sumatorias <- data.frame(c("",""),
+                         c("Totales","Neto a Pagar"),
+                         c(formatC(sum(individuo[,3], na.rm = T), big.mark = ",", format = "f", digits = 2), ""),
+                         c(if(!is.na(individuo[nrow(individuo),4]))
+                            {formatC(sum(individuo[,4], na.rm = T), big.mark = ",", format = "f", digits = 2)}
+                           else {"0"}, 
+                           
+                           if(!is.na(individuo[nrow(individuo),4])) 
+                           {formatC(sum(individuo[,3], na.rm = T)-sum(individuo[,4], na.rm = T), big.mark = ",", format = "f", digits = 2)}
+                           else 
+                             {formatC(sum(individuo[,3], na.rm = T), big.mark = ",", format = "f", digits = 2)}
+                           )
+                         )
+
+
+sup<-xtable(sumatorias)
+align(sup)<-"|p{3cm}|p{3cm}p{6cm}|p{3cm}|p{3cm}|"
+print(sup, include.rownames=F, include.colnames=F, hline.after = c(0,1,2))
+
+
+
+```
+
+
+
+```{r, echo=F, out.height="200px", out.width="470px", fig.align='center'}
+#library(knitr)
+#include_graphics("footer.png")
+```
+
+
+
+
